@@ -34,7 +34,8 @@ func main() {
 	}
 
 	// create tables
-	if _, err := db.ExecContext(context.Background(), schema); err != nil {
+	ctx := context.Background()
+	if _, err := db.ExecContext(ctx, schema); err != nil {
 		panic(err)
 	}
 
@@ -44,7 +45,7 @@ func main() {
 
 	switch {
 	case *artist != "":
-		rows, err := q.GetAlbums(context.TODO(), *artist)
+		rows, err := q.GetAlbums(ctx, *artist)
 		if err != nil {
 			panic(err)
 		}
