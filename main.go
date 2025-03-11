@@ -6,6 +6,8 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -20,9 +22,12 @@ var artist = flag.String("artist", "", "")
 func main() {
 	// https://docs.sqlc.dev/en/stable/tutorials/getting-started-sqlite.html
 
+	ex, _ := os.Executable()
+	abs := filepath.Join(filepath.Dir(ex), "collection2.db")
+
 	db, err := sql.Open(
 		"sqlite3", // not sqlite!
-		"./collection2.db",
+		abs,
 	)
 	if err != nil {
 		panic(err)
