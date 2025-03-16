@@ -93,5 +93,7 @@ func maxLen(it iter.Seq[string]) int {
 // View renders the program's UI, which is just a string. The view is
 // rendered after every Update.
 func (m *Model) View() string {
-	return lipgloss.NewStyle().MaxHeight(len(m.albums)).Render(m.t.View())
+	return lipgloss.NewStyle().
+		MaxHeight(len(m.albums) + 2).
+		Render(m.t.View())
 }
