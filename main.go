@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	tea "github.com/charmbracelet/bubbletea"
 	_ "github.com/mattn/go-sqlite3"
 
 	"disq/sqlc"
@@ -43,15 +44,26 @@ func main() {
 
 	flag.Parse()
 
+	// TODO: fallthrough cases with squirrel?
 	switch {
 	case *artist != "":
-		rows, err := q.GetAlbums(ctx, *artist)
+		albums, err := q.GetAlbums(ctx, *artist)
 		if err != nil {
 			panic(err)
 		}
 
-		// TODO: tabular
-		fmt.Println(rows)
+		if albums == nil {
+			return
+		}
+
+		lf, _ := tea.LogToFile("/tmp/disq.log", "")
+		defer lf.Close()
+
+		m := Model{albums: albums}
+		_, err = tea.NewProgram(&m).Run()
+		if err != nil {
+			panic(err)
+		}
 
 	default:
 		fmt.Println("noop")

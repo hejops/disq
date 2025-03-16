@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS albums (
     id INTEGER,
     title TEXT NOT NULL,
-    year INTEGER,
+    year INTEGER, -- TODO: not null?
     rating INTEGER, -- 0 to 5
     date_added INTEGER NOT NULL, -- unix seconds
     PRIMARY KEY (id)

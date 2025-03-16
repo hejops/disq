@@ -19,6 +19,7 @@ INNER JOIN albums_artists
 INNER JOIN albums
     ON albums_artists.album_id = albums.id
 WHERE name LIKE ?
+ORDER BY rating DESC
 `
 
 type GetAlbumsRow struct {

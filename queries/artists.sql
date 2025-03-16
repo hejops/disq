@@ -1,8 +1,8 @@
--- name: GetAlbums :many
 -- SELECT
 --     artists.name AS artist,
 --     albums.title AS album
 
+-- name: GetAlbums :many
 SELECT artists.name AS artist, albums.title AS album, year, rating
 FROM artists
 INNER JOIN albums_artists
@@ -10,4 +10,4 @@ INNER JOIN albums_artists
 INNER JOIN albums
     ON albums_artists.album_id = albums.id
 WHERE name LIKE ?
--- ORDER BY random() LIMIT 1
+ORDER BY rating DESC
