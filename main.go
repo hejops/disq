@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
 	_ "embed"
@@ -53,12 +54,13 @@ func artistMenu(
 }
 
 func readLine() string {
-	var dest string
-	_, _ = fmt.Scanln(&dest)
-	// if err != nil { // unexpected newline
-	// 	panic(err)
-	// }
-	return dest
+	// fmt stops at first whitespace!
+	scanner := bufio.NewScanner(os.Stdin)
+	if scanner.Scan() {
+		line := scanner.Text()
+		return line
+	}
+	return ""
 }
 
 func main() {
