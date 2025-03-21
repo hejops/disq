@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
 	_ "github.com/mattn/go-sqlite3"
@@ -19,6 +20,42 @@ import (
 var schema string
 
 var artist = flag.String("artist", "", "")
+
+func artistMenu(
+	q *sqlc.Queries,
+	ctx context.Context,
+	s string,
+) string {
+	artists, err := q.GetArtist(ctx, sql.NullString{String: s, Valid: true})
+	if err != nil {
+		panic(err)
+	}
+
+	for i, a := range artists {
+		fmt.Println(i+1, a)
+	}
+
+	switch len(artists) {
+	case 0:
+		// panic("no artist")
+		os.Exit(1)
+		return ""
+	case 1:
+		return artists[0]
+	default:
+		n := readLine()
+		return artists[must(strconv.Atoi(n))-1]
+	}
+}
+
+func readLine() string {
+	var dest string
+	_, err := fmt.Scanln(&dest)
+	if err != nil {
+		panic(err)
+	}
+	return dest
+}
 
 func main() {
 	// https://docs.sqlc.dev/en/stable/tutorials/getting-started-sqlite.html
@@ -44,28 +81,34 @@ func main() {
 
 	flag.Parse()
 
-	// TODO: fallthrough cases with squirrel?
-	switch {
-	case *artist != "":
-		albums, err := q.GetAlbums(ctx, *artist)
-		if err != nil {
-			panic(err)
-		}
-
-		if albums == nil {
-			return
-		}
-
-		lf, _ := tea.LogToFile("/tmp/disq.log", "")
-		defer lf.Close()
-
-		m := Model{albums: albums}
-		_, err = tea.NewProgram(&m).Run()
-		if err != nil {
-			panic(err)
-		}
-
-	default:
-		fmt.Println("noop")
+	if *artist == "" {
+		a := artistMenu(q, ctx, readLine())
+		artist = &a
 	}
+
+	// TODO: fallthrough cases with squirrel?
+	// switch {
+	// case *artist != "":
+	albums, err := q.GetAlbums(ctx, *artist)
+	if err != nil {
+		panic(err)
+	}
+
+	if albums == nil {
+		fmt.Println("no results")
+		return
+	}
+
+	lf, _ := tea.LogToFile("/tmp/disq.log", "")
+	defer lf.Close()
+
+	m := Model{albums: albums}
+	_, err = tea.NewProgram(&m).Run()
+	if err != nil {
+		panic(err)
+	}
+
+	// default:
+	// 	fmt.Println("noop")
+	// }
 }

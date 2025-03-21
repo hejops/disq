@@ -11,7 +11,6 @@ import (
 )
 
 const getAlbums = `-- name: GetAlbums :many
-
 SELECT artists.name AS artist, albums.title AS album, year, rating
 FROM artists
 INNER JOIN albums_artists
@@ -29,10 +28,6 @@ type GetAlbumsRow struct {
 	Rating sql.NullInt64
 }
 
-// SELECT
-//
-//	artists.name AS artist,
-//	albums.title AS album
 func (q *Queries) GetAlbums(ctx context.Context, name string) ([]GetAlbumsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAlbums, name)
 	if err != nil {
@@ -51,6 +46,35 @@ func (q *Queries) GetAlbums(ctx context.Context, name string) ([]GetAlbumsRow, e
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getArtist = `-- name: GetArtist :many
+SELECT name --AS artist
+FROM artists
+WHERE name LIKE '%' || ? || '%'
+`
+
+func (q *Queries) GetArtist(ctx context.Context, dollar_1 sql.NullString) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getArtist, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
