@@ -8,7 +8,7 @@ INNER JOIN albums
 WHERE name LIKE ?
 ORDER BY rating DESC;
 
--- name: GetArtist :many
+-- name: GetArtistsWithSubstring :many
 SELECT name --AS artist
 FROM artists
 WHERE name LIKE '%' || ? || '%'; -- LIKE is case-insensitive

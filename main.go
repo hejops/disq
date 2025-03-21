@@ -26,7 +26,7 @@ func artistMenu(
 	ctx context.Context,
 	s string,
 ) string {
-	artists, err := q.GetArtist(ctx, sql.NullString{String: s, Valid: true})
+	artists, err := q.GetArtistsWithSubstring(ctx, sql.NullString{String: s, Valid: true})
 	if err != nil {
 		panic(err)
 	}
@@ -44,16 +44,20 @@ func artistMenu(
 		return artists[0]
 	default:
 		n := readLine()
+		if n == "" {
+			// artistMenu(q, ctx, s)
+			return artists[0]
+		}
 		return artists[must(strconv.Atoi(n))-1]
 	}
 }
 
 func readLine() string {
 	var dest string
-	_, err := fmt.Scanln(&dest)
-	if err != nil {
-		panic(err)
-	}
+	_, _ = fmt.Scanln(&dest)
+	// if err != nil { // unexpected newline
+	// 	panic(err)
+	// }
 	return dest
 }
 
@@ -82,7 +86,12 @@ func main() {
 	flag.Parse()
 
 	if *artist == "" {
-		a := artistMenu(q, ctx, readLine())
+		fmt.Print("search artist: ")
+		search := readLine()
+		if search == "" {
+			return
+		}
+		a := artistMenu(q, ctx, search)
 		artist = &a
 	}
 
@@ -102,6 +111,7 @@ func main() {
 	lf, _ := tea.LogToFile("/tmp/disq.log", "")
 	defer lf.Close()
 
+	fmt.Println(len(albums), "albums")
 	m := Model{albums: albums}
 	_, err = tea.NewProgram(&m).Run()
 	if err != nil {

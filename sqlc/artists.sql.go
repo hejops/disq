@@ -56,14 +56,14 @@ func (q *Queries) GetAlbums(ctx context.Context, name string) ([]GetAlbumsRow, e
 	return items, nil
 }
 
-const getArtist = `-- name: GetArtist :many
+const getArtistsWithSubstring = `-- name: GetArtistsWithSubstring :many
 SELECT name --AS artist
 FROM artists
 WHERE name LIKE '%' || ? || '%'
 `
 
-func (q *Queries) GetArtist(ctx context.Context, dollar_1 sql.NullString) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, getArtist, dollar_1)
+func (q *Queries) GetArtistsWithSubstring(ctx context.Context, dollar_1 sql.NullString) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getArtistsWithSubstring, dollar_1)
 	if err != nil {
 		return nil, err
 	}
