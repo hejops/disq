@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"iter"
 	"log"
 	"strconv"
@@ -13,13 +14,13 @@ import (
 )
 
 type Model struct {
-	t      table.Model
-	albums []sqlc.GetAlbumsRow
+	t           table.Model
+	albums      []sqlc.GetAlbumsRow
+	interactive bool
+	done        bool
 }
 
-func must[T any](x T, _ error) T {
-	return x
-}
+func must[T any](x T, _ error) T { return x }
 
 func asRow(album sqlc.GetAlbumsRow) table.Row {
 	y := must(album.Year.Value()).(int64)
@@ -32,6 +33,24 @@ func asRow(album sqlc.GetAlbumsRow) table.Row {
 	}
 }
 
+func maxLen(it iter.Seq[string]) int {
+	var w int
+	for s := range it {
+		w = max(w, len(s))
+	}
+	return w
+}
+
+func (m *Model) getAlbums() iter.Seq[string] { // meh
+	return func(yield func(string) bool) {
+		for _, album := range m.albums {
+			if !yield(album.Album) {
+				return
+			}
+		}
+	}
+}
+
 // Init is the first function that will be called. It returns an optional
 // initial command. To not perform an initial command return nil.
 func (m *Model) Init() tea.Cmd {
@@ -41,7 +60,7 @@ func (m *Model) Init() tea.Cmd {
 	}
 	log.Println(len(rows), "rows")
 
-	m.t = table.New()
+	m.t = table.New() // this instantiation makes struct embedding tricky
 	m.t.SetColumns([]table.Column{
 		{Title: "Artist", Width: len(m.albums[0].Artist)},
 		{Title: "Album", Width: maxLen(m.getAlbums())}, // TODO: truncate
@@ -72,28 +91,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m *Model) getAlbums() iter.Seq[string] {
-	return func(yield func(string) bool) {
-		for _, album := range m.albums {
-			if !yield(album.Album) {
-				return
-			}
-		}
-	}
-}
-
-func maxLen(it iter.Seq[string]) int {
-	var w int
-	for s := range it {
-		w = max(w, len(s))
-	}
-	return w
-}
-
 // View renders the program's UI, which is just a string. The view is
 // rendered after every Update.
 func (m *Model) View() string {
-	return lipgloss.NewStyle().
+	s := lipgloss.NewStyle().
 		MaxHeight(len(m.albums) + 2).
 		Render(m.t.View())
+	if !m.interactive && !m.done {
+		// [ -t 1 ] false -> WithoutRenderer -> no Render -> need to print ourselves
+		fmt.Println(s)
+		m.done = true // View is called 2x on program init, for some reason
+	}
+	return s
 }
